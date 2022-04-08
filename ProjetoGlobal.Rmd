@@ -1,0 +1,260 @@
+---
+title: "Projeto Global"
+author: "Bruno Tonet"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+knitr::opts_knit$set(root.dir = "~/Documents/Humanizadas2022")
+
+pacman::p_load(dplyr, tidyverse, forcats, stringi, stringr, xlsx, readr, lubridate, janitor, numbersBR, ggplot2, ggthemes, ggtext, ggpubr, ggcorrplot, ggstatsplot, NPS, Hmisc, tinytex)
+
+```
+
+```{r QuantitativeData, include=FALSE}
+
+QuantitativeData <- 
+  xlsx::read.xlsx(file = "QuantitativeData.xlsx", sheetIndex = 2) %>% 
+  janitor::clean_names() %>% 
+  dplyr::select("Empresa" = empresa, 
+                "ID" = i_si_n_code, 
+                "Moeda" = moeda_antiga,
+                "Geral" = geral, 
+                "Cultura_Valores" = cultura_e_valores,
+                "Alta_Liderança" = alta_lideranca, 
+                ano_do_preco_acao_primeira_abertura,
+                preco_acao_primeira_abertura_eur, 
+                valor_da_acao_ha_5_anos_eur, 
+                preco_acao_ultimo_fechamento_eur, 
+                receita_2021_eur, 
+                ebtida_2021_eur, 
+                "Pacto" = faz_parte_do_pacto_sim_ou_nao, 
+                "Engagements" = quantos_engagements_faz_parte)
+
+```
+
+# Quantitativa Data Analysis
+
+## Glassdoor
+
+> Agrupamento por Região/Moeda
+
+```{r Geral Descritivo}
+
+QuantitativeData %>% 
+  dplyr::select(Moeda, Geral) %>% 
+  group_by(Moeda) %>% 
+  summarise(Mínimo_Geral = min(Geral, na.rm = T), 
+            Máximo_Geral = max(Geral, na.rm = T))
+
+QuantitativeData %>% 
+  dplyr::select(Moeda, Geral) %>% 
+  group_by(Moeda) %>% 
+  summarise(Média_Geral = mean(Geral, na.rm = T), 
+            DesvPad_Geral = sd(Geral, na.rm = T))
+
+```
+
+```{r Geral Plot, warning=FALSE}
+
+QuantitativeData %>% 
+  ggplot2::ggplot(aes(x = Geral)) + 
+  ggplot2::geom_histogram(aes(y = ..density..), colour = 1, fill = "white", bins = 100) + 
+  ggplot2::geom_density(lwd = 1, colour = 4, fill = 4, alpha = 0.25) + 
+  ggplot2::xlim(0, 5) + 
+  ggplot2::ylab(NULL)
+
+```
+
+```{r Cultura e Lid Descritivo}
+
+QuantitativeData %>% 
+  dplyr::select(Moeda, Cultura_Valores, Alta_Liderança) %>% 
+  group_by(Moeda) %>% 
+  summarise(Mínimo_Cultura_Valores = min(Cultura_Valores, na.rm = T), 
+            Máximo_Cultura_Valores = max(Cultura_Valores, na.rm = T), 
+            Mínimo_Alta_Liderança = min(Alta_Liderança, na.rm = T), 
+            Máximo_Alta_Liderança = max(Alta_Liderança, na.rm = T))
+
+QuantitativeData %>% 
+  dplyr::select(Moeda, Cultura_Valores, Alta_Liderança) %>% 
+  group_by(Moeda) %>% 
+  summarise(Média_Cultura_Valores = mean(Cultura_Valores, na.rm = T), 
+            DesvPad_Cultura_Valores = sd(Cultura_Valores, na.rm = T), 
+            Média_Alta_Liderança = mean(Alta_Liderança, na.rm = T), 
+            DesvPad_Alta_Liderança = sd(Alta_Liderança, na.rm = T))
+
+```
+
+```{r Cultura e Lid Plot, warning=FALSE}
+
+QuantitativeData %>% 
+  ggplot2::ggplot(aes(x = Cultura_Valores)) + 
+  ggplot2::geom_histogram(aes(y = ..density..), colour = 1, fill = "white", bins = 100) + 
+  ggplot2::geom_density(lwd = 1, colour = 4, fill = 4, alpha = 0.25) + 
+  ggplot2::xlim(0, 5) + 
+  ggplot2::ylab(NULL)
+
+QuantitativeData %>% 
+  ggplot2::ggplot(aes(x = Alta_Liderança)) + 
+  ggplot2::geom_histogram(aes(y = ..density..), colour = 1, fill = "white", bins = 100) + 
+  ggplot2::geom_density(lwd = 1, colour = 4, fill = 4, alpha = 0.25) + 
+  ggplot2::xlim(0, 5) + 
+  ggplot2::ylab(NULL)
+
+```
+
+> Agrupamento por entrada no Pacto Global
+
+```{r Geral Cultura Lid Descritivo}
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, Geral) %>% 
+  group_by(Pacto) %>% 
+  summarise(Mínimo_Geral = min(Geral, na.rm = T), 
+            Máximo_Gerals = max(Geral, na.rm = T))
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, Geral) %>% 
+  group_by(Pacto) %>% 
+  summarise(Média_Geral = mean(Geral, na.rm = T), 
+            DesvPad_Gerals = sd(Geral, na.rm = T))
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, Cultura_Valores, Alta_Liderança) %>% 
+  group_by(Pacto) %>% 
+  summarise(Mínimo_Cultura_Valores = min(Cultura_Valores, na.rm = T), 
+            Máximo_Cultura_Valores = max(Cultura_Valores, na.rm = T), 
+            Mínimo_Alta_Liderança = min(Alta_Liderança, na.rm = T), 
+            Máximo_Alta_Liderança = max(Alta_Liderança, na.rm = T))
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, Cultura_Valores, Alta_Liderança) %>% 
+  group_by(Pacto) %>% 
+  summarise(Média_Cultura_Valores = mean(Cultura_Valores, na.rm = T), 
+            DesvPad_Cultura_Valores = sd(Cultura_Valores, na.rm = T), 
+            Média_Alta_Liderança = mean(Alta_Liderança, na.rm = T), 
+            DesvPad_Alta_Liderança = sd(Alta_Liderança, na.rm = T))
+
+```
+
+```{r Geral Cultura Lid Plot, warning=FALSE}
+
+QuantitativeData %>% 
+  ggplot2::ggplot(aes(x = Geral)) + 
+  ggplot2::geom_histogram(aes(y = ..density..), colour = 1, fill = "white", bins = 100) + 
+  ggplot2::geom_density(lwd = 1, colour = 4, fill = 4, alpha = 0.25) + 
+  ggplot2::xlim(0, 5) + 
+  ggplot2::ylab(NULL) + 
+  ggplot2::facet_wrap(~Pacto)
+
+QuantitativeData %>% 
+  ggplot2::ggplot(aes(x = Cultura_Valores)) + 
+  ggplot2::geom_histogram(aes(y = ..density..), colour = 1, fill = "white", bins = 100) + 
+  ggplot2::geom_density(lwd = 1, colour = 4, fill = 4, alpha = 0.25) + 
+  ggplot2::xlim(0, 5) + 
+  ggplot2::ylab(NULL) + 
+  ggplot2::facet_wrap(~Pacto)
+
+QuantitativeData %>% 
+  ggplot2::ggplot(aes(x = Alta_Liderança)) + 
+  ggplot2::geom_histogram(aes(y = ..density..), colour = 1, fill = "white", bins = 100) + 
+  ggplot2::geom_density(lwd = 1, colour = 4, fill = 4, alpha = 0.25) + 
+  ggplot2::xlim(0, 5) + 
+  ggplot2::ylab(NULL) + 
+  ggplot2::facet_wrap(~Pacto)
+
+```
+
+#### Proposta de intervalos
+
+> Proposta para Geral:
+
+```{r}
+
+QuantitativeData$Geral %>% 
+  quantile(probs = seq(0, 1, 1/7), na.rm = T)
+
+```
+
+> Proposta para Cultura e Valores:
+
+```{r}
+
+QuantitativeData$Cultura_Valores %>% 
+  quantile(probs = seq(0, 1, 1/7), na.rm = T)
+
+```
+
+> Proposta para Alta Liderança:
+
+```{r}
+
+QuantitativeData$Alta_Liderança %>% 
+  quantile(probs = seq(0, 1, 1/7), na.rm = T)
+
+```
+
+> Conclusão:
+
+Os valores me parecem bem distribuídos, com uma média e mediana consistentes para o conjunto de dados apresentados. Três questões me chamaram a atenção. A primeira delas é o desvio-padrão de “Cultura e Valores” e “Alta Liderança” estão um pouco mais altos para o padrão de distribuição dos dados. Essa alta variação pode estar relacionada com o natureza da medição ou do construto. A segunda delas, e derivada da primeira, é que os países europeus apresentam a maior variação nos dados. Como não sei como essas características foram construídas, não tenho como inferir alguma coisa com segurança. Por fim, quando avaliamos as *distribuições* e *histogramas* podemos considerar que **existe uma tendência à direita em todos os gráficos** e que também **existem empresas "boas" e empresas "ruins"**.
+
+### Google Finance
+
+> Agrupamento por entrada no Pacto Global
+
+```{r}
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, ano_do_preco_acao_primeira_abertura, preco_acao_primeira_abertura_eur, preco_acao_ultimo_fechamento_eur) %>% 
+  group_by(Pacto) %>% 
+  summarise(Mínimo_Valor_Inicial = min(preco_acao_primeira_abertura_eur, na.rm = T), 
+            Máximo_Valor_Inicial = max(preco_acao_primeira_abertura_eur, na.rm = T), 
+            Mínimo_Valor_Atual = min(preco_acao_ultimo_fechamento_eur, na.rm = T), 
+            Máximo_Valor_Atual = max(preco_acao_ultimo_fechamento_eur, na.rm = T))
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, ano_do_preco_acao_primeira_abertura, preco_acao_primeira_abertura_eur, preco_acao_ultimo_fechamento_eur) %>% 
+  group_by(Pacto) %>% 
+  summarise(Média_Valor_Inicial = mean(preco_acao_primeira_abertura_eur, na.rm = T), 
+            DesvPad_Valor_Inicial = sd(preco_acao_primeira_abertura_eur, na.rm = T), 
+            Média_Valor_Atual = mean(preco_acao_ultimo_fechamento_eur, na.rm = T), 
+            DesvPad_Valor_Atual = sd(preco_acao_ultimo_fechamento_eur, na.rm = T))
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, ano_do_preco_acao_primeira_abertura, preco_acao_primeira_abertura_eur, preco_acao_ultimo_fechamento_eur) %>% 
+  group_by(Pacto) %>% 
+  summarise(Média_Valor_Inicial = mean(preco_acao_primeira_abertura_eur, na.rm = T), 
+            DesvPad_Valor_Inicial = sd(preco_acao_primeira_abertura_eur, na.rm = T), 
+            Média_Valor_Atual = mean(preco_acao_ultimo_fechamento_eur, na.rm = T), 
+            DesvPad_Valor_Atual = sd(preco_acao_ultimo_fechamento_eur, na.rm = T))
+
+```
+
+```{r}
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, receita_2021_eur, ebtida_2021_eur) %>% 
+  dplyr::group_by(Pacto) %>% 
+  summarise(Mínimo_Receita_2021_EUR = min(receita_2021_eur, na.rm = T), 
+            Média_Receita_2021_EUR = mean(receita_2021_eur, na.rm = T), 
+            DesvPad_Receita_2021_EUR = sd(receita_2021_eur, na.rm = T), 
+            Máximo_Receita_2021_EUR = max(receita_2021_eur, na.rm = T))
+
+QuantitativeData %>% 
+  dplyr::select(Pacto, receita_2021_eur, ebtida_2021_eur) %>% 
+  dplyr::group_by(Pacto) %>% 
+  summarise(Mínimo_Ebitida_2021_EUR = min(ebtida_2021_eur, na.rm = T), 
+            Média_Ebitida_2021_EUR = mean(ebtida_2021_eur, na.rm = T), 
+            DesvPad_Ebitida_2021_EUR = sd(ebtida_2021_eur, na.rm = T), 
+            Máximo_Ebitida_2021_EUR = max(ebtida_2021_eur, na.rm = T))
+
+```
+
+Outro ponto interessante diz respeito ao valor médio das ações. Empresas que adotam o Pacto Global apresentam um valor médio maior, mas também apresentam um desvio-padrão maior - costumam valer mais, mas também flutuam mais. Aquelas que adotam um maior número de “engagements” apresentam uma média e um desvio-padrão menor - tudo isso para os valores das ações há cinco anos.
